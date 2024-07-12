@@ -53,10 +53,10 @@ while (1) {
             $version = "1.0";
             $iris = $podping['iris'];
             break;
-	case "1.1":
-	    $version = "1.1";
-	    $iris = $podping["iris"];
-	    break;
+        case "1.1":
+            $version = "1.1";
+            $iris = $podping["iris"];
+            break;
         default:
             continue 2;
     }
@@ -64,6 +64,7 @@ while (1) {
     //Logging - incoming podping banner
     echo "PODPING(v$version) - $medium - $reason:\n";
 
+    $results = [];
     //Handle each iri
     foreach ($iris as $iri) {
         //Make sure it's a valid iri scheme that we are prepared to handle
@@ -76,12 +77,34 @@ while (1) {
         //Logging
         echo " -- Poll: [$iri].\n";
 
+        // add to the results
+        $results[] = $iri;
+
         //Attempt to mark the feed for immediate polling
         //$result = poll_feed($iri);
     }
 
     //logging - visual break
     echo "\n";
+
+    // send a POST request to the podping endpoint at https://podscan.fm/-/podping, containing the results in a json array called "urls
+
+    // create a new cURL resource
+    $ch = curl_init();
+
+    // get REPORT_URL from environment
+    $report_url = getenv('REPORT_URL');
+
+    // set URL and other appropriate options
+    curl_setopt($ch, CURLOPT_URL, $report_url);
+    curl_setopt($ch, CURLOPT_POST, 1);
+    curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode(["urls" => $results]));
+    curl_setopt($ch, CURLOPT_HTTPHEADER, array('Content-Type: application/json'));
+
+    curl_exec($ch);
+
+    // close cURL resource, and free up system resources
+    curl_close($ch);
 }
 
 //Exit
