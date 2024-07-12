@@ -1,6 +1,38 @@
 # podping-hivewatcher
 A watcher script for the hive backed podping network.
 
+# ADJUSTED for my own use. Will break for you.
+
+- updated dependencies
+- run scripts
+- updated watcher PHP script
+
+## Setup:
+```
+if ! command -v python3 &> /dev/null
+then
+    echo "Python3 is not installed. Please install it."
+    exit
+fi
+
+# if poetry isn't installed
+if ! command -v poetry &> /dev/null
+then
+    echo "Poetry is not installed. Installing..."
+    curl -sSL https://install.python-poetry.org | python3 -
+fi
+
+git clone https://github.com/arvidkahl/podping-hivewatcher.git
+cd podping-hivewatcher/
+python3 -m venv venv
+source ./venv/bin/activate
+pip3 install setuptools
+poetry lock
+poetry install
+chmod +x podping.sh
+```
+
+
 ## Blockchain Watcher (hive-watcher.py)
 
 The stream of *podpings* can be watched with the ```hive-watcher.py``` code. 
