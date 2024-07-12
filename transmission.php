@@ -23,7 +23,7 @@ while (1) {
     $json = trim(readline());
     $podping = json_decode($json, TRUE);
 
-    echo "--- $timestamp ---\n " . $json . "\n";
+//    echo "--- $timestamp ---\n " . $json . "\n";
 
     //Bail on unknown payload schema
     if (!isset($podping['version']) || empty($podping['version'])) {
@@ -62,7 +62,7 @@ while (1) {
     }
 
     //Logging - incoming podping banner
-    echo "PODPING(v$version) - $medium - $reason:\n";
+//    echo "PODPING(v$version) - $medium - $reason:\n";
 
     $results = [];
     //Handle each iri
@@ -75,7 +75,7 @@ while (1) {
         }
 
         //Logging
-        echo " -- Poll: [$iri].\n";
+//        echo " -- Poll: [$iri].\n";
 
         // add to the results
         $results[] = $iri;
@@ -85,10 +85,12 @@ while (1) {
     }
 
     //logging - visual break
-    echo "\n";
+
+    echo "Reporting results to podping endpoint: " . json_encode($results) . "\n";
 
     // send a POST request to the podping endpoint at https://podscan.fm/-/podping, containing the results in a json array called "urls
 
+    try {
     // create a new cURL resource
     $ch = curl_init();
 
@@ -105,6 +107,9 @@ while (1) {
 
     // close cURL resource, and free up system resources
     curl_close($ch);
+    } catch (Exception $e) {
+        echo "Error reporting: " . $e->getMessage() . "\n";
+    }
 }
 
 //Exit
