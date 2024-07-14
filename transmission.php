@@ -78,7 +78,13 @@ while (1) {
 //        echo " -- Poll: [$iri].\n";
 
         // add to the results
-        $results[] = $iri;
+
+        if ($medium === "podcast") {
+            $results[] = $iri;
+        } else {
+            echo "Don't know how to handle medium: $medium\n";
+        }
+
 
         //Attempt to mark the feed for immediate polling
         //$result = poll_feed($iri);
