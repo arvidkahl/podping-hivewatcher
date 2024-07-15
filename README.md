@@ -20,10 +20,13 @@ if ! command -v poetry &> /dev/null
 then
     echo "Poetry is not installed. Installing..."
     curl -sSL https://install.python-poetry.org | python3 -
+    echo 'export PATH="/root/.local/bin:$PATH"' >> ~/.bashrc
+    source ~/.bashrc
 fi
 
 git clone https://github.com/arvidkahl/podping-hivewatcher.git
 cd podping-hivewatcher/
+apt install python3.10-venv
 python3 -m venv venv
 source ./venv/bin/activate
 pip3 install setuptools
