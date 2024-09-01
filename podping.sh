@@ -1,7 +1,5 @@
 #!/bin/bash
-
-set -e  # Exit immediately if a command exits with a non-zero status
-set -o pipefail  # Ensure that pipeline errors are propagated
+set -eEo pipefail  # Exit on error, propagate ERR traps, and ensure pipeline errors are propagated
 
 # Function to log messages
 log_message() {
@@ -14,7 +12,7 @@ log_error() {
 }
 
 # Trap to catch and log any unexpected errors
-trap 'log_error "Unexpected error occurred. Exit code: $?"' ERR
+trap 'log_error "Unexpected error occurred. Exit code: $? (Line: $LINENO, Command: $BASH_COMMAND)"' ERR
 
 # Activate the virtual environment
 if ! source venv/bin/activate; then
@@ -27,13 +25,33 @@ trap 'deactivate; log_message "Script execution completed."' EXIT
 
 while true; do
     log_message "Starting hive-watcher.py and transmission.php"
-
-    if ! python3 -u ./hive-watcher.py --json --unix_epoch=$(($(date +'%s') - 30)) | php transmission.php; then
-        log_error "Python script or PHP script failed"
+    
+    # Use a named pipe to capture output and error streams
+    pipe=$(mktemp -u)
+    mkfifo "$pipe"
+    
+    # Run the pipeline with timeout and capture its exit status
+    (
+        timeout 300 python3 -u ./hive-watcher.py --json --unix_epoch=$(($(date +'%s') - 30)) 2>&1 | \
+        tee "$pipe" | \
+        php transmission.php
+    ) &
+    
+    # Read from the pipe in the background
+    cat "$pipe" > /dev/null &
+    
+    # Wait for the pipeline to finish and capture its exit status
+    wait $! && pipeline_status=$? || pipeline_status=$?
+    
+    # Clean up the named pipe
+    rm "$pipe"
+    
+    if [ $pipeline_status -ne 0 ]; then
+        log_error "Pipeline failed with exit code $pipeline_status"
         sleep 5  # Wait for 5 seconds before restarting
         continue
     fi
-
+    
     # If we reach here, it means the scripts completed successfully
     log_message "Scripts completed successfully"
     sleep 1  # Small delay before next iteration
